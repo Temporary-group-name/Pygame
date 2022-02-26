@@ -3,6 +3,8 @@
 import os
 import pygame as pg
 import numpy as np
+import cv2
+import time
 import random
 from OpenCamera import Camera
 from imageUse import *
@@ -12,7 +14,12 @@ class FaceGame:
         self.white = (255,255,255)#白色
         self.display = display#显示
         self.camera = Camera(self.display)#摄像头
+        #self.sounds = sounds
         self.emotion, self.buttons = Emotion()
+        self.remaining_time = 300
+        self.clock = pg.time.Clock()
+        self.imgs = Emotion()
+        self.result = 0
         
     
     def cover(self):
@@ -37,11 +44,10 @@ class FaceGame:
         location('level3.png',self.display,168,72,404,337)
         pg.display.update()
 
-
         while True:  
             for event in pg.event.get():
                 if event.type == pg.QUIT:
-                    pg.quit()                    
+                    pg.quit()
             mouse = pg.mouse.get_pos()
             click = pg.mouse.get_pressed()
             if 245<=mouse[0]<=495 and 64<=mouse[1]<=160 and click[0]==1:
@@ -58,7 +64,6 @@ class FaceGame:
                 break
     
     def countDown(self):
-        imgs = CountDownImgs()
         countDownImg = [picture(str(index)+'.png',576,480) for index in range(4)]
         start = pg.time.get_ticks()
         
@@ -70,60 +75,59 @@ class FaceGame:
             self.display.fill(self.white)
             self.display.blit(pg.transform.flip(self.camera.capture(), True, False), (0,0))
             self.display.blit(countDownImg[index], (32,0))
+            print("countdown")
             pg.display.update()
 
     def start(self):
         print("start")
+        next = [True for i in range(self.level)]
+        mission = [ 0 for i in range(self.level)]
         score = 0
         count = 0
-        time = 300
-        next = [True for i in range(self.level)]
-        pos = [(0, (2-i)*144) for i in range(self.level)]
-        mission = [ 0 for i in range(self.level)]
         start = pg.time.get_ticks()#獲取以毫秒爲單位的時間
         self.result, self.sim = -1, 0
 
         while True:
-            
-            #time up
-            if (pg.time.get_ticks()%1000 == 0):
-                time = time - 1
-                time_w = str(time)
-                if (time < 0):
-                    exit = self.end(score)
-                    if exit:
-                        return False
-                    else:
-                        return True
-
-
             for event in pg.event.get():
                 if event.type == pg.QUIT:
-                    pg.quit()                    
+                    pg.quit()                                        
             mouse = pg.mouse.get_pos()
             click = pg.mouse.get_pressed()
             #pause暂停键
-            if 440<=mouse[0]<=540 and 20<=mouse[1]<=120 and click[0]==1:
+            if 640<=mouse[0]<=740 and 160<=mouse[1]<=260 and click[0]==1:
                 print("pause")
                 exit = self.pause()
                 if exit:
                     return False
             #exit
-            if 560<=mouse[0]<=660 and 20<=mouse[1]<=120 and click[0]==1:
+            if 640<=mouse[0]<=740 and 290<=mouse[1]<=380 and click[0]==1:
                 return False
+            
+            
             frame = self.camera.capture() #pygame surface
             self.display.fill(self.white)
             self.display.blit(pg.transform.flip(frame, True, False),(0,0))
 
-            word("Time", self.display, 240, 20)
-            word(str(time), self.display, 260, 50)
-            word("Score", self.display, 340, 20)
-            word(str(score), self.display, 360, 50)
-            self.display.blit(self.buttons[0], (440, 20))
-            self.display.blit(self.buttons[1], (560, 20))
+            self.remaining_time -= (pg.time.get_ticks() - start)/1000
+            start = pg.time.get_ticks()
+            if self.remaining_time <= 0:
+                exit = self.end(score)
+                if exit:
+                    return False
+                else:
+                    return True
+
+            word("Time", self.display, 650, 20)
+            word(str(self.remaining_time), self.display, 660, 50)
+            word("Score", self.display, 650, 90)
+            word(str(score), self.display, 680, 120)
+            self.display.blit(self.buttons[0], (640, 160))
+            self.display.blit(self.buttons[1], (640, 288))
+
+           
+                
             pg.display.update()
-       
-                        
+             
 
         
     def pause(self):
@@ -191,7 +195,7 @@ class FaceGame:
         running = True
         while running:
             self.menu()
-            self.countDown
+            self.countDown()
             running = self.start()  
         self.exit()   
         print("success")
