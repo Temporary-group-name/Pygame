@@ -14,11 +14,12 @@ def picture(filename, a=160, b=160):
     image = pg.transform.scale(image, (a,b))  
     return image
     
-def word(text, display, x, y, size=30, color=(255,255,255)):
+def word(text, display, x, y, size=30, color=(0,0,0)):
     font = pg.font.SysFont('comicsansms', size)
     render_txt = font.render(text, True, color)
     display.blit(render_txt, (x,y))
-        
+
+
 def CountDownImgs():
     imgs = []
     imgs.append(picture('LeftO.png',96,96))
